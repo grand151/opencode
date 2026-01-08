@@ -21,6 +21,10 @@ export interface SessionDetails extends Session {
   messages?: Message[];
 }
 
+interface SessionsResponse {
+  sessions: Session[];
+}
+
 export class OpencodeApiClient {
   private baseUrl: string;
 
@@ -62,7 +66,7 @@ export class OpencodeApiClient {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: SessionsResponse = await response.json();
       return data.sessions || [];
     } catch (error) {
       console.error('Failed to list sessions:', error);

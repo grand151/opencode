@@ -11,13 +11,14 @@ import {
 import { useServer } from '../contexts/ServerContext';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
+import type { Message } from '../utils/api-client';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Session'>;
 
 export function SessionScreen({ route, navigation }: Props) {
   const { sessionId } = route.params;
   const { getSession } = useServer();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -47,7 +48,7 @@ export function SessionScreen({ route, navigation }: Props) {
     setInput('');
     
     // Add user message optimistically
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: messageText,

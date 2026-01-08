@@ -11,13 +11,14 @@ import {
 import { useServer } from '../contexts/ServerContext';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
+import type { Session } from '../utils/api-client';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export function HomeScreen({ navigation }: Props) {
   const { serverUrl, setServerUrl, connected, fetchSessions } = useServer();
   const [inputUrl, setInputUrl] = useState(serverUrl);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleConnect = async () => {
