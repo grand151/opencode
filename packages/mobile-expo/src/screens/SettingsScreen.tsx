@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { useServer } from '../contexts/ServerContext';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
@@ -8,6 +8,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export function SettingsScreen({ navigation }: Props) {
   const { serverUrl, connected } = useServer();
+
+  const platformName = Platform.OS === 'ios' ? 'iOS' : Platform.OS === 'android' ? 'Android' : 'Web';
 
   return (
     <ScrollView style={styles.container}>
@@ -33,7 +35,7 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
         <View style={styles.item}>
           <Text style={styles.label}>Platform</Text>
-          <Text style={styles.value}>Android (Expo)</Text>
+          <Text style={styles.value}>{platformName} (Expo)</Text>
         </View>
       </View>
 
