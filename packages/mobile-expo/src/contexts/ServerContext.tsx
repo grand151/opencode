@@ -1,17 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface Session {
-  id: string;
-  title?: string;
-  created?: string;
-}
+import { OpencodeApiClient, type Session, type SessionDetails } from '../utils/api-client';
 
 interface ServerContextType {
   serverUrl: string;
   setServerUrl: (url: string) => void;
   connected: boolean;
   fetchSessions: () => Promise<Session[]>;
-  getSession: (id: string) => Promise<any>;
+  getSession: (id: string) => Promise<SessionDetails | null>;
 }
 
 const ServerContext = createContext<ServerContextType | undefined>(undefined);
@@ -19,48 +14,38 @@ const ServerContext = createContext<ServerContextType | undefined>(undefined);
 export function ServerProvider({ children }: { children: ReactNode }) {
   const [serverUrl, setServerUrl] = useState('http://localhost:4096');
   const [connected, setConnected] = useState(false);
+  const [apiClient, setApiClient] = useState<OpencodeApiClient | null>(null);
 
   useEffect(() => {
     if (!serverUrl) {
       setConnected(false);
+      setApiClient(null);
       return;
     }
 
+    const client = new OpencodeApiClient(serverUrl);
+    setApiClient(client);
+
     // Test connection
-    fetch(`${serverUrl}/api/health`)
-      .then((res) => {
-        if (res.ok) {
-          setConnected(true);
-        } else {
-          setConnected(false);
-        }
-      })
-      .catch(() => {
-        setConnected(false);
-      });
+    client.checkHealth()
+      .then((isHealthy) => setConnected(isHealthy))
+      .catch(() => setConnected(false));
   }, [serverUrl]);
 
   const fetchSessions = async (): Promise<Session[]> => {
+    if (!apiClient) return [];
     try {
-      const response = await fetch(`${serverUrl}/api/session`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch sessions');
-      }
-      const data = await response.json();
-      return data.sessions || [];
+      return await apiClient.listSessions();
     } catch (error) {
       console.error('Error fetching sessions:', error);
       return [];
     }
   };
 
-  const getSession = async (id: string): Promise<any> => {
+  const getSession = async (id: string): Promise<SessionDetails | null> => {
+    if (!apiClient) return null;
     try {
-      const response = await fetch(`${serverUrl}/api/session/${id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch session');
-      }
-      return await response.json();
+      return await apiClient.getSession(id);
     } catch (error) {
       console.error('Error fetching session:', error);
       return null;

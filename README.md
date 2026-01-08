@@ -54,6 +54,22 @@ OpenCode is also available as a desktop application. Download directly from the 
 brew install --cask opencode-desktop
 ```
 
+### Mobile App (Android - EXPERIMENTAL)
+
+OpenCode is also available as a mobile application for Android using Expo React Native. This is an experimental port that allows you to connect to your OpenCode server and manage sessions on the go.
+
+To run the mobile app:
+
+```bash
+cd packages/mobile-expo
+npm install --no-workspaces
+npm start
+```
+
+Then scan the QR code with the Expo Go app on your Android device, or run on an Android emulator with `npm run android`.
+
+See [packages/mobile-expo/README.md](packages/mobile-expo/README.md) for more details.
+
 #### Installation Directory
 
 The install script respects the following priority order for the installation path:
