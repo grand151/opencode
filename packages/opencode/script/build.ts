@@ -60,10 +60,16 @@ const allTargets: {
   arch: "arm64" | "x64"
   abi?: "musl"
   avx2?: false
+  android?: boolean
 }[] = [
   {
     os: "linux",
     arch: "arm64",
+  },
+  {
+    os: "linux",
+    arch: "arm64",
+    android: true,
   },
   {
     os: "linux",
@@ -146,7 +152,7 @@ for (const item of targets) {
   const name = [
     pkg.name,
     // changing to win32 flags npm for some reason
-    item.os === "win32" ? "windows" : item.os,
+    item.os === "win32" ? "windows" : item.android ? "android" : item.os,
     item.arch,
     item.avx2 === false ? "baseline" : undefined,
     item.abi === undefined ? undefined : item.abi,
@@ -163,6 +169,9 @@ for (const item of targets) {
   const bunfsRoot = item.os === "win32" ? "B:/~BUN/root/" : "/$bunfs/root/"
   const workerRelativePath = path.relative(dir, parserWorker).replaceAll("\\", "/")
 
+  // For Android, use the linux-arm64 target as Bun doesn't have native Android support
+  const buildTarget = item.android ? "bun-linux-arm64" : name.replace(pkg.name, "bun")
+
   await Bun.build({
     conditions: ["browser"],
     tsconfig: "./tsconfig.json",
@@ -174,7 +183,7 @@ for (const item of targets) {
       //@ts-ignore (bun types aren't up to date)
       autoloadTsconfig: true,
       autoloadPackageJson: true,
-      target: name.replace(pkg.name, "bun") as any,
+      target: buildTarget as any,
       outfile: `dist/${name}/bin/opencode`,
       execArgv: [`--user-agent=opencode/${Script.version}`, "--use-system-ca", "--"],
       windows: {},
