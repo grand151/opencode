@@ -61,6 +61,18 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
 > [!TIP]
 > Remove versions older than 0.1.x before installing.
 
+#### Android/Termux
+
+OpenCode can be installed on Android ARM64 devices using Termux:
+
+```bash
+# In Termux
+curl -fsSL https://opencode.ai/install | bash
+```
+
+> [!NOTE]
+> The Android build is based on the Linux ARM64 binary and may require proot-distro for full compatibility. Direct execution in Termux may have limitations due to Android's security model. For best results, consider using proot-distro with Alpine Linux.
+
 ### Desktop App (BETA)
 
 OpenCode is also available as a desktop application. Download directly from the [releases page](https://github.com/anomalyco/opencode/releases) or [opencode.ai/download](https://opencode.ai/download).

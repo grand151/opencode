@@ -67,7 +67,7 @@ Then run it with:
 ./packages/opencode/dist/opencode-<platform>/bin/opencode
 ```
 
-Replace `<platform>` with your platform (e.g., `darwin-arm64`, `linux-x64`).
+Replace `<platform>` with your platform (e.g., `darwin-arm64`, `linux-x64`, `android-arm64`).
 
 - Core pieces:
   - `packages/opencode`: OpenCode core business logic & server.
