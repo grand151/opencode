@@ -6,11 +6,15 @@ import {
   AppBaseProviders,
   AppInterface,
   handleNotificationClick,
+  loadLocaleDict,
+  normalizeLocale,
+  type Locale,
   type Platform,
   PlatformProvider,
   ServerConnection,
   useCommand,
 } from "@opencode-ai/app"
+import * as Sentry from "@sentry/solid"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { readImage } from "@tauri-apps/plugin-clipboard-manager"
@@ -294,10 +298,15 @@ const createPlatform = (): Platform => {
       return { updateAvailable: true, version: next.version }
     },
 
-    update: async () => {
+    updateAndRestart: async () => {
       if (!UPDATER_ENABLED || !update) return
       if (ostype() === "windows") await commands.killSidecar().catch(() => undefined)
-      await update.install().catch(() => undefined)
+      const installed = await update
+        .install()
+        .then(() => true)
+        .catch(() => false)
+      if (!installed) return
+      await relaunch()
     },
 
     restart: async () => {
@@ -407,13 +416,24 @@ const createPlatform = (): Platform => {
 }
 
 let menuTrigger = null as null | ((id: string) => void)
-createMenu((id) => {
+void createMenu((id) => {
   menuTrigger?.(id)
 })
 void listenForDeepLinks()
 
 render(() => {
   const platform = createPlatform()
+  const loadLocale = async () => {
+    const current = await platform.storage?.("opencode.global.dat").getItem("language")
+    const legacy = current ? undefined : await platform.storage?.().getItem("language.v1")
+    const raw = current ?? legacy
+    if (!raw) return
+    const locale = raw.match(/"locale"\s*:\s*"([^"]+)"/)?.[1]
+    if (!locale) return
+    const next = normalizeLocale(locale)
+    if (next !== "en") await loadLocaleDict(next)
+    return next satisfies Locale
+  }
 
   // Fetch sidecar credentials from Rust (available immediately, before health check)
   const [sidecar] = createResource(() => commands.awaitInitialization(new Channel<InitStep>() as any))
@@ -423,6 +443,7 @@ render(() => {
       if (url) return ServerConnection.key({ type: "http", http: { url } })
     }),
   )
+  const [locale] = createResource(loadLocale)
 
   // Build the sidecar server connection once credentials arrive
   const servers = () => {
@@ -465,8 +486,8 @@ render(() => {
 
   return (
     <PlatformProvider value={platform}>
-      <AppBaseProviders>
-        <Show when={!defaultServer.loading && !sidecar.loading}>
+      <AppBaseProviders locale={locale.latest}>
+        <Show when={!defaultServer.loading && !sidecar.loading && !locale.loading}>
           {(_) => {
             return (
               <AppInterface
