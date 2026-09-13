@@ -192,6 +192,8 @@ const layer = Layer.effect(
             status: "error",
             input: match.part.state.input,
             error: errorMessage(error),
+            // Keep metadata streamed while running so failures retain progress detail (e.g. execute's child calls).
+            metadata: match.part.state.metadata,
             time: { start: match.part.state.time.start, end: Date.now() },
           },
         })
@@ -433,6 +435,20 @@ const layer = Layer.effect(
           case "step-finish": {
             const completedSnapshot = yield* snapshot.track()
             yield* Effect.forEach(Object.keys(ctx.reasoningMap), finishReasoning)
+            // Anthropic reports thinking blocks it removed before the model saw the
+            // prompt. Prefix mismatches mean opencode changed history behind a signed
+            // block; log them so the churn can be tracked down.
+            const dropped = isRecord(value.providerMetadata?.anthropic)
+              ? value.providerMetadata.anthropic.inputTransformations
+              : undefined
+            if (Array.isArray(dropped) && dropped.length > 0) {
+              yield* Effect.logWarning("thinking blocks dropped by provider", {
+                sessionID: ctx.sessionID,
+                messageID: ctx.assistantMessage.id,
+                model: ctx.model.id,
+                transformations: JSON.stringify(dropped),
+              })
+            }
             const usage = Session.getUsage({
               model: ctx.model,
               usage: value.usage ?? new Usage({}),
